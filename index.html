@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parks Studio</title>
+<meta name="description" content="Parks Studio makes small, useful tools for people who live in spreadsheets.">
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .studio { padding-top: 12vh; }
+  .studio h1 { max-width: 16ch; }
+  .products { margin-top: 64px; border-top: 2px solid var(--ink); max-width: 720px; }
+  .product { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 18px; align-items: center;
+             padding: 22px 0; border-bottom: 1px solid var(--grid); color: inherit; text-decoration: none; }
+  .product img { width: 56px; height: 56px; border-radius: 13px; }
+  .product b { font: 700 1.3rem/1.2 var(--display); display: block; }
+  .product span { color: var(--ink-soft); }
+  .product:hover b { color: var(--ledger); }
+</style>
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap"><a class="brand" href="./">Parks Studio</a></div>
+</header>
+
+<main class="wrap studio">
+  <h1>Small, useful tools for people who live in spreadsheets</h1>
+  <div class="products">
+    <a class="product" href="sheet-styles/">
+      <img src="sheet-styles/icon.png" alt="">
+      <div><b>Sheet Styles</b><span>Headings and a clickable outline for Google Sheets.</span></div>
+    </a>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Parks Studio</span>
+    <nav aria-label="Contact"><a href="mailto:support@parks.studio">support@parks.studio</a></nav>
+  </div>
+</footer>
+</body>
+</html>
