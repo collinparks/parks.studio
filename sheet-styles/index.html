@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sheet Styles: headings and an outline for Google Sheets</title>
+<meta name="description" content="Sheet Styles adds Google Docs-style Title and Heading styles to Google Sheets, plus a clickable outline that jumps to any heading in your spreadsheet.">
+<link rel="icon" href="../favicon.png">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* ---------- Hero ---------- */
+  .hero { padding-top: 40px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+  .hero-copy .fineprint { margin-top: 16px; font-size: 0.92rem; color: var(--ink-soft); }
+
+  /* The demo: a small working sheet with its outline */
+  .demo { background: var(--white); border: 1px solid var(--grid); border-radius: 14px; overflow: hidden;
+          box-shadow: 0 1px 0 var(--grid), 0 24px 48px -28px rgba(28, 36, 33, 0.35); }
+  .demo-bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--grid);
+              font: 700 0.95rem/1 var(--display); }
+  .demo-bar img { width: 18px; height: 18px; border-radius: 4px; }
+  .demo-bar span { color: var(--ink-soft); font: 400 0.85rem/1 var(--body); margin-left: auto; }
+  .demo-body { display: grid; grid-template-columns: minmax(0, 1fr) 210px; height: 380px; }
+
+  .sheet { overflow-y: auto; position: relative; scrollbar-width: thin; }
+  .sheet table { border-collapse: collapse; width: 100%; font-size: 0.82rem; table-layout: fixed; }
+  .sheet th { position: sticky; top: 0; z-index: 1; background: #f1f4f1; color: var(--ink-soft); font-weight: 400;
+              font-size: 0.75rem; height: 24px; border: 1px solid var(--grid); }
+  .sheet th:first-child, .sheet td:first-child { width: 34px; text-align: center; color: var(--ink-soft);
+              background: #f1f4f1; font-size: 0.72rem; }
+  .sheet td { border: 1px solid var(--grid); padding: 4px 8px; height: 28px; white-space: nowrap; overflow: hidden;
+              text-overflow: ellipsis; transition: background-color 0.6s ease; }
+  .sheet td.t  { font: 700 1.25rem/1.1 var(--display); padding: 10px 8px; }
+  .sheet td.h1 { font: 700 1.02rem/1.2 var(--display); padding-top: 8px; }
+  .sheet td.h2 { font-weight: 700; font-size: 0.9rem; }
+  .sheet td.h3 { font-style: italic; color: var(--ink-soft); }
+  .sheet tr.hit td:not(:first-child) { background: var(--mark); }
+
+  .outline { border-left: 1px solid var(--grid); background: #fbfcfa; padding: 14px 10px; overflow-y: auto; }
+  .outline h3 { font-size: 0.95rem; margin: 2px 6px 4px; }
+  .outline p { font-size: 0.76rem; color: var(--ink-soft); margin: 0 6px 12px; }
+  .outline button { display: block; width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+                    font: inherit; color: var(--ink); padding: 6px 8px; border-radius: 6px; font-size: 0.86rem;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .outline button:hover { background: #eef2ee; }
+  .outline button[aria-current="true"] { background: #e3eee7; color: var(--ledger-deep); }
+  .outline .l0 { font-weight: 700; }
+  .outline .l1 { padding-left: 18px; font-weight: 700; }
+  .outline .l2 { padding-left: 30px; }
+  .outline .l3 { padding-left: 42px; color: var(--ink-soft); font-size: 0.8rem; }
+  .demo-hint { text-align: center; font-size: 0.85rem; color: var(--ink-soft); margin: 12px auto 0; }
+
+  /* ---------- Steps ---------- */
+  .steps { list-style: none; padding: 0; margin: 40px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; counter-reset: step; }
+  .steps li { counter-increment: step; border-top: 2px solid var(--ink); padding-top: 18px; }
+  .steps li::before { content: counter(step); display: block; font: 700 2.4rem/1 var(--display); color: var(--ledger); margin-bottom: 14px; }
+  .steps p { margin: 8px 0 0; color: var(--ink-soft); }
+
+  /* ---------- Feature split ---------- */
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
+  .split ul { margin: 0; padding: 0; list-style: none; }
+  .split li { padding: 16px 0; border-bottom: 1px solid var(--grid); }
+  .split li:first-child { padding-top: 4px; }
+  .split li b { display: block; font-family: var(--display); font-size: 1.08rem; margin-bottom: 2px; }
+  .split li span { color: var(--ink-soft); }
+
+  /* ---------- Pricing as a sheet ---------- */
+  .pricing-intro { margin: 14px 0 0; color: var(--ink-soft); }
+  .plans { margin-top: 36px; border: 1px solid var(--grid); border-radius: 14px; overflow: hidden; background: var(--white); }
+  .plans table { width: 100%; border-collapse: collapse; }
+  .plans th, .plans td { padding: 16px 20px; border-bottom: 1px solid var(--grid); text-align: left; vertical-align: top; }
+  .plans tr:last-child td { border-bottom: 0; }
+  .plans thead th { background: #f1f4f1; font-weight: 400; color: var(--ink-soft); font-size: 0.92rem; }
+  .plans thead th.plan { color: var(--ink); }
+  .plans .plan-name { display: block; font: 700 1.35rem/1.1 var(--display); color: var(--ink); }
+  .plans .price { display: block; font: 700 2rem/1 var(--display); margin-top: 10px; color: var(--ink); }
+  .plans .price small { font: 400 0.95rem var(--body); color: var(--ink-soft); }
+  .plans td:not(:first-child) { width: 26%; }
+  .plans .pro { background: #f3f8f4; }
+  .yes { color: var(--ledger); font-weight: 700; }
+  .no { color: var(--ink-soft); }
+  .plans .btn { margin-top: 2px; padding: 12px 18px; font-size: 0.95rem; }
+
+  /* ---------- FAQ ---------- */
+  .faq { margin-top: 28px; max-width: 760px; }
+  .faq details { border-bottom: 1px solid var(--grid); }
+  .faq summary { cursor: pointer; list-style: none; padding: 18px 32px 18px 0; position: relative;
+                 font: 700 1.08rem/1.35 var(--display); }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; position: absolute; right: 4px; top: 16px; font: 400 1.5rem/1 var(--body); color: var(--ledger); }
+  .faq details[open] summary::after { content: '\2212'; }
+  .faq details p { margin: 0 0 18px; color: var(--ink-soft); }
+
+  @media (max-width: 880px) {
+    .hero, .split { grid-template-columns: 1fr; gap: 36px; }
+    .steps { grid-template-columns: 1fr; gap: 28px; }
+  }
+  @media (max-width: 560px) {
+    .demo-body { grid-template-columns: minmax(0, 1fr) 150px; height: 340px; }
+    .outline button { font-size: 0.8rem; }
+    .sheet th:nth-child(4), .sheet td:nth-child(4):not([colspan]) { display: none; }
+    .site-head nav { display: none; }
+    .plans th, .plans td { padding: 12px 10px; font-size: 0.92rem; }
+    .plans .price { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="icon.png" alt="">Sheet Styles</a>
+    <nav aria-label="Page">
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">Help</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <h1>Find your place in a big spreadsheet</h1>
+      <p class="lede">Sheet Styles brings Google Docs headings to Google Sheets. Mark a cell as a Title or Heading, and it shows up in a clickable outline that jumps you straight there.</p>
+      <div class="actions">
+        <!-- REPLACE href with the Google Workspace Marketplace listing link once it's approved -->
+        <a class="btn btn-primary" href="#pricing" data-link="marketplace">Install for Google Sheets</a>
+        <a class="btn btn-quiet" href="#pricing">See pricing</a>
+      </div>
+      <p class="fineprint">Free for up to 10 headings per spreadsheet. Pro is $20 a year.</p>
+    </div>
+
+    <figure class="demo-wrap" style="margin:0">
+      <div class="demo" role="group" aria-label="Interactive example of the Sheet Styles outline">
+        <div class="demo-bar"><img src="icon.png" alt="">Festival planning<span>Google Sheets</span></div>
+        <div class="demo-body">
+          <div class="sheet" id="sheet" tabindex="0" aria-label="Example spreadsheet">
+            <table>
+              <thead><tr><th></th><th>A</th><th>B</th><th>C</th></tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <nav class="outline" aria-label="Example outline">
+            <h3>Outline</h3>
+            <p>Click a heading</p>
+            <div id="outline"></div>
+          </nav>
+        </div>
+      </div>
+      <figcaption class="demo-hint">Try it: click a heading in the outline.</figcaption>
+    </figure>
+  </div>
+
+  <section class="wrap" id="how">
+    <h2>Three steps from scrolling to jumping</h2>
+    <ol class="steps">
+      <li><h3>Install the add-on</h3><p>Add Sheet Styles from the Google Workspace Marketplace. It shows up under Extensions in every spreadsheet you open.</p></li>
+      <li><h3>Mark your headings</h3><p>Select a cell and click Title, H1, H2 or H3. Your formatting stays exactly as it is, or apply a ready-made heading style if you want one.</p></li>
+      <li><h3>Jump anywhere</h3><p>Open the outline and click any heading to go straight to it. Search the list when it gets long.</p></li>
+    </ol>
+  </section>
+
+  <section class="wrap split">
+    <h2>Headings that stay where you put them</h2>
+    <ul>
+      <li><b>Anchored to the cell</b><span>Insert rows, delete columns, restyle the text. The heading moves with its cell and stays in the outline.</span></li>
+      <li><b>Ranked or in order</b><span>See every Title first, then Heading 1s, 2s and 3s, or switch to the order they appear in the sheet.</span></li>
+      <li><b>The whole spreadsheet at once</b><span>With Pro, one outline lists headings from every tab, grouped by tab name.</span></li>
+      <li><b>Styles like Google Docs</b><span>Title, Subtitle, Heading 1 to 3, Table header and Note. Edit them, add your own, or copy a style from any cell.</span></li>
+    </ul>
+  </section>
+
+  <section class="wrap" id="pricing">
+    <h2>Free for small sheets, $20 a year for everything</h2>
+    <p class="pricing-intro">Pro is a yearly subscription through Gumroad. Cancel any time; Pro stays on until the end of the year you paid for. One license covers up to 3 Google accounts.</p>
+    <div class="plans">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col" class="plan"><span class="plan-name">Free</span><span class="price">$0</span></th>
+            <th scope="col" class="plan pro"><span class="plan-name">Pro</span><span class="price">$20 <small>per year</small></span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Title, Subtitle, Heading and custom styles</td><td class="yes">Yes</td><td class="yes pro">Yes</td></tr>
+          <tr><td>Mark headings without changing formatting</td><td class="yes">Yes</td><td class="yes pro">Yes</td></tr>
+          <tr><td>Outline of the current tab, with search</td><td class="yes">Yes</td><td class="yes pro">Yes</td></tr>
+          <tr><td>Headings per spreadsheet</td><td>10</td><td class="pro">Unlimited</td></tr>
+          <tr><td>All tabs in one outline</td><td class="no">No</td><td class="yes pro">Yes</td></tr>
+          <tr>
+            <td></td>
+            <!-- REPLACE both hrefs: Marketplace listing link, then the Gumroad product link -->
+            <td><a class="btn btn-quiet" href="#how" data-link="marketplace">Install free</a></td>
+            <td class="pro"><a class="btn btn-primary" href="#pricing" data-link="gumroad">Get Pro</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="wrap" id="faq">
+    <h2>Help</h2>
+    <div class="faq">
+      <details>
+        <summary>How do I unlock Pro after buying?</summary>
+        <p>Your Gumroad receipt includes a license key. In any spreadsheet, open Extensions &gt; Sheet Styles &gt; Open outline and styles, click Upgrade, paste the key and click Activate. Pro then works in every spreadsheet on that Google account.</p>
+      </details>
+      <details>
+        <summary>Does marking a heading change how my sheet looks?</summary>
+        <p>No. The Title, H1, H2 and H3 buttons in the outline only add the cell to the outline. Your fonts, colors and sizes stay exactly as they are. The Styles tab is there if you do want to restyle a cell.</p>
+      </details>
+      <details>
+        <summary>What can Sheet Styles see in my Google account?</summary>
+        <p>Only the spreadsheet you have open, and only while you use the add-on. It can't open your other files, your email or your Drive. Details are in the <a href="privacy.html">privacy policy</a>.</p>
+      </details>
+      <details>
+        <summary>I moved a heading and it left the outline. Why?</summary>
+        <p>Headings follow their cell when you insert or delete rows and columns. If you cut a heading and paste it somewhere else, the mark stays behind on the old cell. Unmark the old cell and mark the new one.</p>
+      </details>
+      <details>
+        <summary>Can my coworkers see the outline?</summary>
+        <p>The headings are saved inside the spreadsheet, so anyone who installs Sheet Styles sees the same outline. People without the add-on just see your sheet as usual.</p>
+      </details>
+      <details>
+        <summary>What happens if I cancel Pro?</summary>
+        <p>Pro stays on until the end of the year you paid for, then the add-on returns to the free plan. Every heading you already marked stays in the outline. You just can't add more past 10 per spreadsheet, and the All tabs view turns off.</p>
+      </details>
+      <details>
+        <summary>How do I get help?</summary>
+        <p>Email <a href="mailto:support@parks.studio">support@parks.studio</a>. Replies usually come within two business days.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Sheet Styles is made by <a href="../">Parks Studio</a>.</span>
+    <nav aria-label="Legal">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="mailto:support@parks.studio">Support</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  // Links to fill in before launch. Empty = the button stays on this page.
+  const LINKS = {
+    marketplace: '',
+    gumroad: ''
+  };
+  document.querySelectorAll('[data-link]').forEach(a => {
+    const url = LINKS[a.dataset.link];
+    if (url) { a.href = url; a.target = '_blank'; a.rel = 'noopener'; }
+  });
+
+  // ---------- Demo sheet ----------
+  const ROWS = [
+    ['t', 'Festival prep tracker'],
+    ['', '', '', ''],
+    ['h1', 'Spring festivals'],
+    ['', 'Vines in the Pines', 'Ruidoso', 'Apr 12'],
+    ['', 'Science of Wine', 'Albuquerque', 'Apr 26'],
+    ['', 'Coffee & Chocolate', 'Albuquerque', 'May 3'],
+    ['h2', 'Staffing'],
+    ['', 'Pour station', '6 people', 'Jess'],
+    ['', 'Merch tent', '2 people', 'Sam'],
+    ['', 'Load-in crew', '4 people', 'Ana'],
+    ['h1', 'Summer festivals'],
+    ['', 'Ruidoso Art Fest', 'Ruidoso', 'Jul 25'],
+    ['', 'CloudWine Fest', 'Cloudcroft', 'Aug 9'],
+    ['', 'Las Golondrinas', 'Santa Fe', 'Aug 9'],
+    ['h2', 'Vendors'],
+    ['', 'Ice delivery', 'Confirmed', ''],
+    ['', 'Tent rental', 'Pending', ''],
+    ['', 'Portable sinks', 'Confirmed', ''],
+    ['h3', 'Permits'],
+    ['', 'Health permit', 'Filed', 'Jun 30'],
+    ['', 'Liquor permit', 'Approved', 'Jul 1'],
+    ['h1', 'Fall festivals'],
+    ['', 'Labor Day Festival', 'Albuquerque', 'Sep 5'],
+    ['', 'Harvest Festival', 'Las Cruces', 'Oct 3'],
+    ['h2', 'Budget'],
+    ['', 'Booth fees', '$1,850', ''],
+    ['', 'Staff wages', '$4,200', ''],
+    ['', 'Glassware', '$640', ''],
+    ['', '', '', ''],
+    ['', '', '', '']
+  ];
+  const LEVEL = { t: 0, h1: 1, h2: 2, h3: 3 };
+  const tbody = document.getElementById('rows');
+  const outline = document.getElementById('outline');
+  const sheet = document.getElementById('sheet');
+
+  ROWS.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + (i + 1);
+    const num = document.createElement('td');
+    num.textContent = i + 1;
+    tr.append(num);
+    if (r[0]) {
+      const td = document.createElement('td');
+      td.colSpan = 3;
+      td.className = r[0];
+      td.textContent = r[1];
+      tr.append(td);
+      const b = document.createElement('button');
+      b.className = 'l' + LEVEL[r[0]];
+      b.textContent = r[1];
+      b.onclick = () => jump(tr, b);
+      outline.append(b);
+    } else {
+      for (let c = 1; c <= 3; c++) {
+        const td = document.createElement('td');
+        td.textContent = r[c] || '';
+        tr.append(td);
+      }
+    }
+    tbody.append(tr);
+  });
+
+  let timer;
+  function jump(tr, btn) {
+    outline.querySelectorAll('button').forEach(x => x.removeAttribute('aria-current'));
+    btn.setAttribute('aria-current', 'true');
+    const head = sheet.querySelector('thead').offsetHeight;
+    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    sheet.scrollTo({ top: tr.offsetTop - head, behavior: smooth ? 'smooth' : 'auto' });
+    tbody.querySelectorAll('tr.hit').forEach(x => x.classList.remove('hit'));
+    tr.classList.add('hit');
+    clearTimeout(timer);
+    timer = setTimeout(() => tr.classList.remove('hit'), 1400);
+  }
+</script>
+</body>
+</html>
